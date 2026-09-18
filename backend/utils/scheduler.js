@@ -29,22 +29,10 @@ const runAutoBackup = async () => {
 
     const backupFileName = `pos-database-backup.db`;
 
-    // 1. Backup to Documents folder (Fail-safe)
+    // Backup to Documents folder (Fail-safe)
     const docsDir = path.join(os.homedir(), "Documents", "POS Backup");
     safeCopy(dbPath, docsDir, backupFileName);
     console.log(`[Scheduler] Database backed up to Documents folder`);
-
-    // 2. Backup to OneDrive folder (If configured)
-    try {
-      const settings = db.prepare("SELECT onedrivePath FROM settings ORDER BY id ASC LIMIT 1").get();
-      const onedrivePath = settings && settings.onedrivePath ? settings.onedrivePath.trim() : "";
-      if (onedrivePath) {
-        safeCopy(dbPath, onedrivePath, backupFileName);
-        console.log(`[Scheduler] Database backed up to OneDrive folder`);
-      }
-    } catch (odErr) {
-      console.log(`[Scheduler] Skipping OneDrive backup:`, odErr.message);
-    }
 
   } catch (err) {
     console.error("[Scheduler] Auto-backup failed:", err.message);

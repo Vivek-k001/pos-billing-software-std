@@ -17,7 +17,7 @@ if (!require("fs").existsSync(sqliteDbDir)) {
   require("fs").mkdirSync(sqliteDbDir, { recursive: true });
 }
 process.env.SQLITE_DB_PATH   = path.join(sqliteDbDir, "pos.db");
-// Forward userData path so backend services (e.g. Excel backup) can write
+// Forward userData path so backend services can write
 // to a safe, writable location in both dev and packaged Electron builds.
 process.env.ELECTRON_USER_DATA = userDataPath;
 

@@ -32,15 +32,13 @@ exports.updateSettings = async (req, res) => {
       trn,
       vatRate,
       autoBackupEnabled,
-      autoBackupFrequency,
-      onedrivePath
+      autoBackupFrequency
     } = req.body;
 
     db.prepare(`
       UPDATE settings
       SET companyName = ?, address = ?, phone = ?, trn = ?, vatRate = ?,
           autoBackupEnabled = ?, autoBackupFrequency = ?,
-          onedrivePath = ?,
           updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
@@ -51,7 +49,6 @@ exports.updateSettings = async (req, res) => {
       vatRate !== undefined ? Number(vatRate) : existing.vatRate,
       autoBackupEnabled !== undefined ? (autoBackupEnabled ? 1 : 0) : existing.autoBackupEnabled,
       autoBackupFrequency !== undefined ? autoBackupFrequency : existing.autoBackupFrequency,
-      onedrivePath !== undefined ? onedrivePath : (existing.onedrivePath || ""),
       existing.id
     );
 
@@ -118,34 +115,6 @@ exports.restoreLocalBackup = async (req, res) => {
     }
 
     res.json({ message: "Database successfully restored from local file!" });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ── OneDrive / Excel Backup Status ──
-
-exports.getExcelBackupStatus = async (req, res) => {
-  try {
-    const settings = db.prepare("SELECT onedrivePath FROM settings ORDER BY id ASC LIMIT 1").get();
-    const onedrivePath = settings && settings.onedrivePath ? settings.onedrivePath.trim() : "";
-
-    if (!onedrivePath) {
-      return res.json({ configured: false, lastBackup: null, onedrivePath: "" });
-    }
-
-    const backupTxtPath = require("path").join(onedrivePath, "last_backup.txt");
-    if (!require("fs").existsSync(backupTxtPath)) {
-      return res.json({ configured: true, lastBackup: null, onedrivePath });
-    }
-
-    const raw = require("fs").readFileSync(backupTxtPath, "utf8").trim();
-    const ts = new Date(raw);
-    if (isNaN(ts.getTime())) {
-      return res.json({ configured: true, lastBackup: null, onedrivePath });
-    }
-
-    res.json({ configured: true, lastBackup: ts.toISOString(), onedrivePath });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

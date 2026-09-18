@@ -183,24 +183,12 @@ const initSchema = () => {
       phone TEXT DEFAULT '',
       trn TEXT DEFAULT '100335760300003',
       vatRate REAL DEFAULT 5,
-      googleClientId TEXT DEFAULT '',
-      googleClientSecret TEXT DEFAULT '',
-      googleRefreshToken TEXT DEFAULT '',
       autoBackupEnabled INTEGER DEFAULT 0,
       autoBackupFrequency TEXT DEFAULT 'daily',
-      onedrivePath TEXT DEFAULT '',
       createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
       updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `).run();
-
-  // Add onedrivePath column if it doesn't exist yet (migration for existing DBs)
-  try {
-    db.prepare("ALTER TABLE settings ADD COLUMN onedrivePath TEXT DEFAULT ''").run();
-    console.log("[DB] Added onedrivePath column to settings");
-  } catch (_) {
-    // Column already exists — ignore
-  }
 
   // ── Migrate existing 'owner' role rows → 'admin' (run before CHECK constraint applies) ──
   // SQLite CHECK constraints are not enforced on existing data during ALTER TABLE,

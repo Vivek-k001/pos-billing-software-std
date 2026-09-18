@@ -7,8 +7,7 @@ const {
   getSettings,
   updateSettings,
   exportLocalBackup,
-  restoreLocalBackup,
-  getExcelBackupStatus
+  restoreLocalBackup
 } = require("../controllers/backupController");
 
 const { auth, requireRole } = require("../middleware/authMiddleware");
@@ -31,8 +30,5 @@ router.put("/settings", auth, requireRole("admin"), updateSettings);
 // ── Local Backup Routes ──
 router.get("/local/export", auth, requireRole("admin"), exportLocalBackup);
 router.post("/local/restore", auth, requireRole("admin"), upload.single("file"), restoreLocalBackup);
-
-// ── OneDrive / Excel Backup Status ──
-router.get("/excel-status", auth, requireRole("admin"), getExcelBackupStatus);
 
 module.exports = router;

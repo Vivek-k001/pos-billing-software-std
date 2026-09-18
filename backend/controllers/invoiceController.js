@@ -2,7 +2,6 @@ const { db } = require("../config/db");
 const { calculateInvoice } = require("../utils/calc");
 const fs = require("fs");
 const path = require("path");
-const { backupInvoiceToExcel } = require("../services/excelBackup");
 
 const addMonths = (date, months) => {
   const warrantyUntil = new Date(date);
@@ -181,20 +180,6 @@ exports.createInvoice = async (req, res) => {
   try {
     const invoice = transaction();
 
-    // ── Excel backup (fire-and-forget) ──────────────────────────────────────
-    // Runs AFTER the SQLite transaction succeeds. Never blocks the response.
-    // If this fails, the error is caught inside backupInvoiceToExcel() and
-    // only logged — the invoice is already safely saved in SQLite.
-    const totalQty = (invoice.items || []).reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
-    backupInvoiceToExcel({
-      date:          invoice.date,
-      invoiceNumber: invoice.invoiceNumber,
-      customerName:  invoice.customer?.name    || "",
-      phoneNumber:   invoice.customer?.contact || "",
-      qty:           totalQty,
-      grandTotal:    invoice.grandTotal,
-    });
-    // ────────────────────────────────────────────────────────────────────────
 
     // In parallel, seed the helper customer directory if it doesn't already contain this customer name
     try {

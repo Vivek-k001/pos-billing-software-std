@@ -73,7 +73,6 @@ export const createApi = (session) => {
     voidInvoice: (id) => request(`/invoices/${id}/void`, { method: "PUT" }),
     getPdfHistory: () => request("/invoices/pdfs"),
     getPdfPath: (invoiceNumber) => request(`/invoices/pdf-path/${encodeURIComponent(invoiceNumber)}`),
-    getExcelBackupStatus: () => request("/backup/excel-status"),
     updateSettings: (payload) => request("/backup/settings", { method: "PUT", body: JSON.stringify(payload) }),
     checkInternetConnection: () => request("/health/internet")
   };

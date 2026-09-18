@@ -52,10 +52,7 @@ backend/controllers/invoiceController.js
 → Invoice saving logic, deducting stock, managing invoice items.
 
 backend/controllers/backupController.js
-→ Local DB exports, Google Drive sync, checking OneDrive backup status.
-
-backend/services/excelBackup.js
-→ Uses exceljs to append invoice data directly to a .xlsx file in the user's OneDrive folder.
+→ Local DB exports, local backup restoration, and backup settings.
 
 [ ELECTRON ]
 main.js
@@ -80,8 +77,7 @@ pos-billing-software/
 │   ├── config/         # Database connection (db.js)
 │   ├── controllers/    # Business logic (e.g., invoiceController.js)
 │   ├── routes/         # Express routers
-│   ├── services/       # Background tasks (excelBackup.js)
-│   ├── utils/          # Helpers (auth.js for hashing)
+│   ├── utils/          # Helpers (auth.js for hashing, scheduler.js)
 │   └── database/       # (Dev) SQLite pos.db location
 ├── frontend/           # React UI
 │   ├── public/         # Static assets (logo, brand.jpg)
@@ -115,7 +111,7 @@ Tables:
 3. `customers` (id, name, location, contact, trn)
 4. `invoices` (id, invoiceNumber, date, totals, discount, paymentMethod, status)
 5. `invoice_items` (Links products to an invoice ID)
-6. `settings` (companyName, trn, onedrivePath, google tokens)
+6. `settings` (companyName, trn, vatRate, autoBackupEnabled, autoBackupFrequency)
 
 ==================================================
 5. INVOICE ENTRY & PDF GENERATION
@@ -162,29 +158,14 @@ const handleCustomerSearch = (text) => {
 };
 
 ==================================================
-7. ONEDRIVE EXCEL BACKUP
+7. LOCAL DATABASE BACKUP & RESTORATION
 ==================================================
-File: `backend/services/excelBackup.js`
+File: `backend/controllers/backupController.js` & `backend/utils/scheduler.js`
 
-• Purpose: Automatically appends every new invoice to a running Excel spreadsheet in the user's local OneDrive folder for cloud safety.
-• Triggered by: `invoiceController.createInvoice` calls `appendInvoiceToExcel()`.
-
-• Workflow:
-  1. Checks `settings` table for `onedrivePath`.
-  2. Opens `customers-YYYY.xlsx` using the `exceljs` library.
-  3. Appends a new row with the invoice totals.
-  4. Saves the file directly to the OneDrive sync folder.
-  
-• What happens if it conflicts?
-  If OneDrive is actively syncing the file while Node.js tries to save it, OneDrive will create a duplicate file ending in `-DESKTOP-NAME.xlsx` to prevent data loss. This is normal OneDrive behavior.
-
-==================================================
-8. GOOGLE DRIVE BACKUP
-==================================================
-File: `backend/controllers/backupController.js`
-
-• Purpose: Backs up the entire raw `pos.db` SQLite database to the cloud.
-• How to view data: You cannot open `.db` files directly in Google Drive. This is meant for Disaster Recovery. The user must use the POS app's "Restore Database" feature to read this data if their laptop breaks.
+• Purpose: Automated and manual fail-safe SQLite database backups.
+• Local Export: Users can download a snapshot of the SQLite database anytime via the UI.
+• Local Restore: Validates uploaded `.db` integrity with SQLite PRAGMA checks and safely restores.
+• Auto-backup Scheduler: Periodically backs up `pos.db` to the local user's Documents folder.
 
 ==================================================
 9. ASSETS & IMAGES
@@ -201,7 +182,7 @@ Auth:
 • POST `/api/auth/login` - Authenticates user.
 
 Invoices:
-• POST `/api/invoices` - Saves new invoice and triggers Excel backup.
+• POST `/api/invoices` - Saves new invoice and updates inventory.
 • GET `/api/invoices` - Fetches all history.
 • PUT `/api/invoices/:id/void` - Voids an invoice (returns stock).
 
