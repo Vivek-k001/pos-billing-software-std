@@ -1,0 +1,238 @@
+==================================================
+IMAGE OFFICE POS - DEVELOPER REFERENCE MANUAL
+==================================================
+This manual serves as the complete technical guide for the Image Office POS Billing Software.
+It is designed to help any developer immediately understand how the software works, where features are located, and how to modify them.
+
+Note: This project uses SQLite (better-sqlite3) for its database, NOT MongoDB. 
+
+==================================================
+FILE INDEX
+==================================================
+
+[ FRONTEND ]
+frontend/src/pages/login.jsx
+→ Login page, authentication logic, user roles.
+
+frontend/src/pages/dashboard.jsx
+→ Main analytics dashboard, sales charts, backup status widget.
+
+frontend/src/pages/staffdashboard.jsx
+→ Invoice Entry form, Customer & Product search/autocomplete, A4 Printable Invoice template, PDF generation (via browser print).
+
+frontend/src/pages/invoicesHistory.jsx
+→ View all past invoices, Void invoices, Reprint invoices.
+
+frontend/src/pages/productManagement.jsx
+→ Manage inventory, add/edit products, track stock, category autocomplete.
+
+frontend/src/pages/dailyReport.jsx & monthlyReport.jsx
+→ Data tables for sales reports based on date ranges.
+
+frontend/src/components/Sidebar.jsx
+→ Left navigation menu, handles routing.
+
+frontend/src/api/client.js
+→ Centralized Axios client for all backend API calls.
+
+[ BACKEND ]
+backend/server.js
+→ Express server entry point, middleware setup, route mounting.
+
+backend/config/db.js
+→ SQLite database setup, table schemas (users, products, customers, invoices, settings).
+
+backend/controllers/authController.js
+→ Login logic, password hashing/verification.
+
+backend/controllers/productController.js & customerController.js
+→ CRUD operations for products and customers.
+
+backend/controllers/invoiceController.js
+→ Invoice saving logic, deducting stock, managing invoice items.
+
+backend/controllers/backupController.js
+→ Local DB exports, Google Drive sync, checking OneDrive backup status.
+
+backend/services/excelBackup.js
+→ Uses exceljs to append invoice data directly to a .xlsx file in the user's OneDrive folder.
+
+[ ELECTRON ]
+main.js
+→ Electron main process. Boots Express server, handles IPC, manages userData paths.
+
+==================================================
+1. PROJECT OVERVIEW
+==================================================
+This is an offline-first Desktop POS application built with:
+• Electron (Desktop wrapper)
+• React + Vite (Frontend UI)
+• Node.js + Express (Backend API)
+• SQLite via better-sqlite3 (Local Database)
+
+The app launches a hidden Express server on `localhost:5000` (or dynamic port) which the React frontend communicates with.
+
+==================================================
+2. FOLDER STRUCTURE
+==================================================
+pos-billing-software/
+├── backend/            # Express API Server
+│   ├── config/         # Database connection (db.js)
+│   ├── controllers/    # Business logic (e.g., invoiceController.js)
+│   ├── routes/         # Express routers
+│   ├── services/       # Background tasks (excelBackup.js)
+│   ├── utils/          # Helpers (auth.js for hashing)
+│   └── database/       # (Dev) SQLite pos.db location
+├── frontend/           # React UI
+│   ├── public/         # Static assets (logo, brand.jpg)
+│   ├── src/
+│   │   ├── api/        # Axios client
+│   │   ├── components/ # Sidebar, Modals
+│   │   ├── pages/      # Main views (Dashboard, etc.)
+│   │   └── utils/      # Frontend helpers
+├── main.js             # Electron startup script
+└── package.json        # Build scripts (electron-builder)
+
+==================================================
+3. ELECTRON STRUCTURE (main.js)
+==================================================
+• Purpose: Wraps the web app into a Windows .exe.
+• Workflow:
+  1. Sets `process.env.SQLITE_DB_PATH` to `app.getPath("userData")` to ensure the DB is saved in a writable folder (`AppData/Roaming/pos-system`).
+  2. Requires `backend/server.js` to start the local Express server.
+  3. Polls `http://localhost:5000/api/health` until the backend responds.
+  4. Loads the React frontend into a `BrowserWindow`.
+
+==================================================
+4. DATABASE STRUCTURE (SQLite - Not MongoDB)
+==================================================
+File: `backend/config/db.js`
+Unlike MongoDB, this app uses a relational SQLite database.
+
+Tables:
+1. `users` (id, name, email, password, role)
+2. `products` (id, name, sku, price, stock, maxStock, category, vat)
+3. `customers` (id, name, location, contact, trn)
+4. `invoices` (id, invoiceNumber, date, totals, discount, paymentMethod, status)
+5. `invoice_items` (Links products to an invoice ID)
+6. `settings` (companyName, trn, onedrivePath, google tokens)
+
+==================================================
+5. INVOICE ENTRY & PDF GENERATION
+==================================================
+File: `frontend/src/pages/staffdashboard.jsx`
+
+• How it works: 
+  The staff dashboard contains two main visual sections:
+  1. The interactive form (Search customers, add products, calculate totals).
+  2. The hidden `<div className="printable-invoice">`.
+
+• How the PDF is generated:
+  We do NOT use a backend PDF generator library (like Puppeteer or PDFKit).
+  Instead, when the user clicks "Print Invoice", the app calls `window.print()`.
+  
+  In `dashboard.css`, there is a `@media print` CSS block that hides the entire application UI (`display: none !important`) EXCEPT the `.printable-invoice` div, which is styled to exactly fit an A4 piece of paper.
+
+• Where to edit the Invoice Design:
+  - HTML structure: Bottom of `staffdashboard.jsx` (and `invoicesHistory.jsx` for reprints).
+  - Styling & Layout: `dashboard.css` (Look for `.printable-invoice` and `@media print`).
+  - Left side blue image: `<img src="/brand.jpg" className="brand-strip-img" />`
+
+• Workflow:
+  Invoice Entry -> Search Product -> Select -> Auto-calculates VAT -> Click Save
+  -> Axios POST to `/api/invoices` -> SQLite `invoices` table
+  -> Calls `window.print()` to generate the PDF/Print.
+
+==================================================
+6. CUSTOMER & PRODUCT AUTOCOMPLETE
+==================================================
+Files: `staffdashboard.jsx`, `productManagement.jsx`
+
+• How it works: 
+  When the user types in the "Customer Name" or "Category" fields, React filters a pre-loaded array of data and renders a custom `<ul>` dropdown (styled with `.suggestions-dropdown` in CSS).
+
+// Example snippet: Autocomplete logic
+const handleCustomerSearch = (text) => {
+  setCustomerSearch(text);
+  // Filters existing customers based on text input
+  const matches = customers.filter(c => 
+    c.name.toLowerCase().includes(text.toLowerCase())
+  );
+  setCustomerSuggestions(matches);
+};
+
+==================================================
+7. ONEDRIVE EXCEL BACKUP
+==================================================
+File: `backend/services/excelBackup.js`
+
+• Purpose: Automatically appends every new invoice to a running Excel spreadsheet in the user's local OneDrive folder for cloud safety.
+• Triggered by: `invoiceController.createInvoice` calls `appendInvoiceToExcel()`.
+
+• Workflow:
+  1. Checks `settings` table for `onedrivePath`.
+  2. Opens `customers-YYYY.xlsx` using the `exceljs` library.
+  3. Appends a new row with the invoice totals.
+  4. Saves the file directly to the OneDrive sync folder.
+  
+• What happens if it conflicts?
+  If OneDrive is actively syncing the file while Node.js tries to save it, OneDrive will create a duplicate file ending in `-DESKTOP-NAME.xlsx` to prevent data loss. This is normal OneDrive behavior.
+
+==================================================
+8. GOOGLE DRIVE BACKUP
+==================================================
+File: `backend/controllers/backupController.js`
+
+• Purpose: Backs up the entire raw `pos.db` SQLite database to the cloud.
+• How to view data: You cannot open `.db` files directly in Google Drive. This is meant for Disaster Recovery. The user must use the POS app's "Restore Database" feature to read this data if their laptop breaks.
+
+==================================================
+9. ASSETS & IMAGES
+==================================================
+Directory: `frontend/public/`
+• `logo.png` - Company logo shown on invoices.
+• `brand.jpg` - The vertical strip on the left side of the printed invoice. 
+• Where to edit: Just replace the files in `frontend/public/`. During PDF print, `dashboard.css` uses `object-fit: fill` or `cover` to size the brand strip.
+
+==================================================
+10. IMPORTANT API ENDPOINTS
+==================================================
+Auth:
+• POST `/api/auth/login` - Authenticates user.
+
+Invoices:
+• POST `/api/invoices` - Saves new invoice and triggers Excel backup.
+• GET `/api/invoices` - Fetches all history.
+• PUT `/api/invoices/:id/void` - Voids an invoice (returns stock).
+
+Products:
+• GET `/api/products` - Fetches inventory.
+• PUT `/api/products/:id` - Updates stock/price.
+
+==================================================
+11. DEPLOYMENT NOTES
+==================================================
+Before compiling with `electron-builder`, ensure the following:
+1. Dynamic Ports: Change hardcoded `5000` in `main.js` to automatically find a free port to prevent conflicts.
+2. DB Path: Ensure `process.env.SQLITE_DB_PATH = app.getPath('userData')` is active in `main.js` so the database isn't locked inside the read-only `Program Files` directory.
+3. better-sqlite3: Native modules must be rebuilt for Electron using `npx @electron/rebuild`.
+4. DevTools: Remove `mainWindow.webContents.openDevTools()` so customers don't see the developer console.
+5. Environment Variables: Remove reliance on `.env` files for production builds, as they aren't packaged securely.
+
+==================================================
+FAQ / HOW TO EDIT...
+==================================================
+Q: How do I change the VAT rate?
+A: It is saved in the SQLite `settings` table, but also hardcoded as a default in `frontend/src/pages/staffdashboard.jsx`.
+
+Q: Where do I change the Arabic text on the invoice?
+A: In `frontend/src/pages/staffdashboard.jsx` inside the `<div className="printable-invoice">` block.
+
+Q: How do I change the Sidebar navigation?
+A: Edit `frontend/src/components/Sidebar.jsx`.
+
+Q: Where does the "Stock Update" logic happen?
+A: `backend/controllers/invoiceController.js`. When an invoice is saved, a SQL transaction deducts `qty` from `products.stock`. When an invoice is Voided, the stock is added back.
+
+Q: How are invoice numbers generated?
+A: In `frontend/src/pages/staffdashboard.jsx`, `generateInvoiceNumber()` fetches the highest ID from the backend and formats it as `INV-YYYYMMDD-00X`.

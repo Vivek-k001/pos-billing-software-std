@@ -1,0 +1,59 @@
+{
+  "name": "pos-system",
+  "version": "1.0.0",
+  "description": "Image Office POS - Point of Sale & Billing Software",
+  "author": "Image Office",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "electron:dev": "npx --yes @electron/rebuild -v 42.4.1 -m backend && electron .",
+    "electron:build": "npm run build && npx --yes @electron/rebuild -v 42.4.1 -m backend && electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
+    "wait-on": "^9.0.10"
+  },
+  "build": {
+    "appId": "com.imageoffice.pos",
+    "productName": "Image Office POS",
+    "icon": "frontend/public/logo1.ico",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "backend/**/*",
+      "frontend/dist/**/*",
+      "frontend/public/logo1.ico",
+      "frontend/public/installer-sidebar.bmp",
+      "frontend/public/installer-header.bmp",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "frontend/public/logo1.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Image Office POS",
+      "installerSidebar": "frontend/public/installer-sidebar.bmp",
+      "uninstallerSidebar": "frontend/public/installer-sidebar.bmp",
+      "installerHeader": "frontend/public/installer-header.bmp"
+    }
+  }
+}

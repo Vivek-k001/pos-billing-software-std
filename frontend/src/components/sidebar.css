@@ -1,0 +1,335 @@
+/* =============================================
+   SIDEBAR — Desktop fixed + Mobile drawer
+   ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@700;800&display=swap');
+
+/* ── Mobile top bar (hidden on desktop) ── */
+.mobile-topbar {
+  display: none;
+}
+
+/* ── Sidebar panel ── */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background: #fff;
+  border-right: 1px solid #f0dfe4;
+  padding: 22px 14px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+  /* Desktop: fixed flow */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+/* Close button — hidden on desktop */
+.sb-close-btn { display: none; }
+
+/* Brand */
+.sb-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f0dfe4;
+}
+.sb-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: contain;
+  border: 2px solid #f5c0c8;
+}
+.sb-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.sb-brand-name {
+  color: #c00026;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  font-family: 'DM Sans', sans-serif;
+}
+.sb-brand-sub {
+  color: #aaa;
+  font-size: 11px;
+  font-weight: 400;
+  font-family: 'DM Sans', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+/* Role badge */
+.sb-role-badge {
+  font-size: 11.5px; font-weight: 600;
+  padding: 7px 12px; border-radius: 8px; margin-bottom: 10px;
+}
+.sb-role-badge.owner { background: #fff0f2; color: #c00026; border: 1px solid #f5c0c8; }
+.sb-role-badge.staff { background: #f0f4ff; color: #3a5fd9; border: 1px solid #c5d0f5; }
+
+/* Nav */
+.sb-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+
+/* Nav item wrapper — carries the red left accent bar when active */
+.sb-item-wrap {
+  position: relative;
+  border-radius: 8px;
+}
+.sb-item-wrap.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: #c00026;
+  border-radius: 0 3px 3px 0;
+}
+
+.sb-btn {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px;
+  background: none; border: none; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  color: #666; cursor: pointer; text-align: left;
+  transition: background 0.18s, color 0.18s;
+  /* bigger tap targets on mobile */
+  min-height: 44px;
+}
+.sb-btn:hover  { background: #fce4ec; color: #c00026; }
+.sb-btn.active { background: #fce4ec; color: #c00026; font-weight: 600; }
+
+/* Logout — sits right below last nav item */
+.sb-logout {
+  color: #e05070;
+  font-weight: 600;
+}
+.sb-logout:hover { background: #fff5f5; color: #c00026; }
+
+/* Thin divider above logout */
+.sb-logout-divider {
+  height: 1px;
+  background: #f0dfe4;
+  margin: 6px 0;
+}
+
+/* Digital Clock */
+.sb-clock {
+  align-self: center;  /* Shrinks the container to wrap the text */
+  margin-top: 10px;
+  background: #fce4ec; /* Pink squircle */
+  color: #c00026;      /* Red font text */
+  border: 1px solid #c00026; /* Red outline */
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  text-align: center;
+  padding: 8px 14px;   /* Added horizontal padding for squircle shape */
+  border-radius: 12px; /* Adjusted squircle appearance */
+  cursor: pointer;
+  user-select: none;
+  letter-spacing: 2px;
+  transition: transform 0.1s;
+}
+
+.sb-clock:active {
+  transform: scale(0.96);
+}
+
+/* Overlay */
+.sb-overlay { display: none; }
+
+/* =============================================
+   MOBILE (max 768px) — Slide-in drawer
+   ============================================= */
+@media (max-width: 768px) {
+
+  /* Show mobile top bar */
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #f0dfe4;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    width: 100%;
+  }
+
+  .mobile-brand {
+    display: flex; align-items: center; gap: 9px;
+    color: #c00026; font-weight: 700; font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .mobile-logo {
+    width: 30px; height: 30px; border-radius: 50%; object-fit: contain;
+  }
+
+  .mobile-hamburger {
+    background: none; border: none; cursor: pointer;
+    color: #c00026; padding: 6px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+  .mobile-hamburger:hover { background: #fce4ec; }
+
+  /* Sidebar becomes off-canvas drawer */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 260px;
+    height: 100vh;
+    min-height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.22,1,0.36,1);
+    box-shadow: none;
+    z-index: 300;
+    padding-top: 16px;
+    overflow-y: auto;
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0,0,0,0.12);
+  }
+
+  /* Show close button on mobile */
+  .sb-close-btn {
+    display: flex;
+    align-self: flex-end;
+    margin-bottom: 12px;
+    background: none; border: none; cursor: pointer;
+    color: #aaa; padding: 6px;
+    border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .sb-close-btn:hover { color: #c00026; background: #fce4ec; }
+
+  /* Overlay */
+  .sb-overlay {
+    display: block;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 250;
+    backdrop-filter: blur(2px);
+  }
+}
+
+/* =============================================
+   LOGOUT CONFIRMATION MODAL
+   ============================================= */
+
+/* Full-screen blurred overlay */
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: modalOverlayIn 0.2s ease;
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* The card */
+.logout-modal {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 36px 32px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(192, 0, 38, 0.15), 0 8px 24px rgba(0,0,0,0.12);
+  animation: modalCardIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: 'DM Sans', sans-serif;
+}
+
+@keyframes modalCardIn {
+  from { opacity: 0; transform: scale(0.88) translateY(16px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0);     }
+}
+
+/* Title */
+.logout-modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 8px;
+  letter-spacing: -0.3px;
+}
+
+/* Subtitle */
+.logout-modal-sub {
+  font-size: 13px;
+  color: #888;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+/* Button row */
+.logout-modal-btns {
+  display: flex;
+  gap: 10px;
+}
+
+/* Base button */
+.logout-modal-btn {
+  flex: 1;
+  padding: 12px 10px;
+  border-radius: 50px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+}
+
+.logout-modal-btn:active {
+  transform: scale(0.96);
+}
+
+/* Cancel — left button */
+.logout-modal-btn.cancel {
+  background: #fce4ec;
+  color: #c00026;
+}
+
+.logout-modal-btn.cancel.focused {
+  background: #c00026;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(192, 0, 38, 0.35);
+}
+
+/* Logout — right button (destructive) */
+.logout-modal-btn.confirm {
+  background: #f5f5f5;
+  color: #c00026;
+}
+
+.logout-modal-btn.confirm.focused {
+  background: #c00026;
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(192, 0, 38, 0.35);
+}

@@ -1,0 +1,17 @@
+node_modules/
+dist-electron/
+Invoice History/
+*.log
+app-stderr.log
+app-stdout.log
+.env.local
+.vscode/
+Thumbs.db
+.DS_Store
+dist/
+out/
+release/
+
+# SQLite temp files
+*.db-shm
+*.db-wal
